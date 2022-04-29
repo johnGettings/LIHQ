@@ -4,7 +4,7 @@
 This project is fully functional but a work in progress. It is currently designed for google colab because I do not have a local GPU that can compete with what colab offers so I have not tested locally. In the future I will redesign for local applications as well. If there is a lot of demand for a local version I will work on it sooner rather than later. I will continue to tweak parameters to achieve best possible output. If a newer model comes along that outperforms one that LIHQ utilizes, I will replace it. (And please let me know if you think you found something that will work better!) This can be a very collaborative project as well, if the community wishes.
 
 ## Inference time
-When I say 'long-inference' I mean it. LIHQ is running up to eight DNNs if you set all parameters at the highest quality. This is meant for short hobby projects, not long videos or commercial applications. See below for expected inference times.
+When I say 'long-inference,' I mean it. LIHQ is running up to eight DNNs if you choose to use every feature. This is meant for short hobby projects, not long videos or commercial applications. See below for expected inference times.
 
 ## How it works
 #### Things you need to do:
