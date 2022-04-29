@@ -1,13 +1,18 @@
 ######################################## Required For Colab Run
-phonemizer==2.2.1 #VITS
-Unidecode==1.1.1 #VITS
+#phonemizer==2.2.1 #VITS
+#Unidecode==1.1.1 #VITS
 ninja #GPEN
 opencv-contrib-python>=4.2.0.34 #Wav2Lip
 addict #ESRGAN
 tb-nightly #ESRGAN
 yapf #ESRGAN
-pydub #VITS
-PyYAML==5.1 #FOMM
+#pydub #VITS
+#PyYAML==5.1 #FOMM
+einops #Tortoise
+entmax #Tortoise
+transformers #Tortoise
+unidecode #Tortoise
+rotary_embedding_torch #Tortoise
 
 
 ########################################Already Installed in colab

@@ -7,7 +7,7 @@ import os
 
 from utils.audio import load_audio, get_voices
 
-def tort(tts, text, voice, preset):
+def tortoise_run(tts, text, voice, preset):
   voices = get_voices()
   cond_paths = voices[voice]
   conds = []
@@ -16,5 +16,16 @@ def tort(tts, text, voice, preset):
       conds.append(c)
 
   gen = tts.tts_with_preset(text, conds, preset)
-  torchaudio.save('generated.wav', gen.squeeze(0).cpu(), 24000)
-  IPython.display.Audio('generated.wav')
+  return gen
+  
+  
+ def tortoise_combo_run(tts, text, voice1, voice2, preset)
+ conds = []
+    for v in [voice1, voice2]:
+      cond_paths = voices[v]
+      for cond_path in cond_paths:
+          c = load_audio(cond_path, 22050)
+          conds.append(c)
+
+    gen = tts.tts_with_preset("They used to say that if man was meant to fly, he’d have wings. But he did fly. He discovered he had to.", conds, preset)
+    return gen
