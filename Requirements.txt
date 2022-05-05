@@ -6,13 +6,13 @@ opencv-contrib-python>=4.2.0.34 #Wav2Lip
 addict #ESRGAN
 tb-nightly #ESRGAN
 yapf #ESRGAN
-#pydub #VITS
 #PyYAML==5.1 #FOMM
 einops #Tortoise
 entmax #Tortoise
 transformers #Tortoise
 unidecode #Tortoise
 rotary_embedding_torch #Tortoise
+pydub
 
 
 ########################################Already Installed in colab

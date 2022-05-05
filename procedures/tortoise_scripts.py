@@ -19,13 +19,14 @@ def tortoise_run(tts, text, voice, preset):
   return gen
   
   
- def tortoise_combo_run(tts, text, voice1, voice2, preset)
- conds = []
-    for v in [voice1, voice2]:
-      cond_paths = voices[v]
-      for cond_path in cond_paths:
-          c = load_audio(cond_path, 22050)
-          conds.append(c)
+def tortoise_combo_run(tts, text, voice1, voice2, preset):
+  conds = []
+  voices = get_voices()
+  for v in [voice1, voice2]:
+    cond_paths = voices[v]
+    for cond_path in cond_paths:
+        c = load_audio(cond_path, 22050)
+        conds.append(c)
 
-    gen = tts.tts_with_preset("They used to say that if man was meant to fly, he’d have wings. But he did fly. He discovered he had to.", conds, preset)
-    return gen
+  gen = tts.tts_with_preset(text, conds, preset)
+  return gen

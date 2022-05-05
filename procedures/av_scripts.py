@@ -1,10 +1,13 @@
 import glob
 import wave
+import os
+
+import cv2
+
 
 #Get a list of all subfolders in audio directory
 def get_auddirnames():
-  audfolders = sorted(glob.glob("/content/audio/*/"))
-  global auddirnames
+  audfolders = sorted(glob.glob("./input/audio/*/"))
   auddirnames = []
   for ff in audfolders:
     auddirnames.append(os.path.basename(os.path.dirname(ff)))
@@ -12,12 +15,12 @@ def get_auddirnames():
 
 #audiofiles should be in numerical order
 #removes everything except combined audio. Coimbined audio name is same as subfolder.
-def combine_audiofiles():
+def combine_audiofiles(auddirnames):
   for dir in auddirnames:
-    audioFiles = sorted(glob.glob('/content/audio/{}/*'.format(dir)))
+    audioFiles = sorted(glob.glob(f'./input/audio/{dir}/*'))
     
     if len(audioFiles) > 1:
-      outfile = '/content/audio/{}/{}.wav'.format(dir,dir)
+      outfile = f'./input/audio/{dir}/{dir}.wav'
       data= []
       for infile in audioFiles:
           w = wave.open(infile, 'rb')
@@ -30,7 +33,7 @@ def combine_audiofiles():
       output.close()
 
       for filez in audioFiles:
-        os.rm(filez)
+        os.remove(filez)
 
 # converts video to frames; outpouts in 0000x.png to framesOutPath location
 def vid2frames(vidPath, framesOutPath):
@@ -43,16 +46,9 @@ def vid2frames(vidPath, framesOutPath):
       frame += 1
 
 #Merging back into video
-def Frame2VidR1():
-  for dir in auddirnames:
-    audPath = glob.glob('/content/audio/{}/*'.format(dir))[0]
-    frames = '/content/GPEN/Out/Round1/' + dir + '/*.png'
-    outPath = '/content/GPEN/Out/VidOutR1/' + dir + '.mp4'
-    os.system(f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {frames} -i {audPath} -vcodec mpeg4 -b 1500k {outPath}')
-
-def Frame2VidR2():
-  for dir in auddirnames:
-    audPath = glob.glob('/content/audio/{}/*'.format(dir))[0]
-    frames = '/content/GPEN/Out/Round2/' + dir + '/*.png'
-    outPath = '/content/FinalVideos/' + faceName + '.mp4'
-    os.system(f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {frames} -i {audPath} -vcodec mpeg4 -b 1500k {outPath}')
+def Frame2Vid(auddirnames, Round):
+    for dir in auddirnames:
+      audPath = glob.glob(f'./input/audio/{dir}/*')[0]
+      frames = f'./GPEN/Out/Round{Round}/{dir}/*.png'
+      outPath = f'./GPEN/Out/VidOutR{Round}/{dir}.mp4'
+      os.system(f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {frames} -i {audPath} -vcodec mpeg4 -b 1500k {outPath}')

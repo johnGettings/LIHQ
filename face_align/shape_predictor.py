@@ -20,6 +20,7 @@ date: 2020.1.5
 note: code is heavily borrowed from
     https://github.com/NVlabs/ffhq-dataset
     http://dlib.net/face_landmark_detection.py.html
+
 requirements:
     apt install cmake
     conda install Pillow numpy scipy
