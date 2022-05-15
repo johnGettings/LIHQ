@@ -40,7 +40,7 @@ def FOMM_chop_refvid(auddirnames, refVid, refVidOffset = [0]):
       i += 1
 
 #Output is in first-order-model folder (output or output-with-sound)
-def FOMM_run(SourceImgPath, SourceVidPath, generator, kp_detector, dir, relativeTF = True):
+def FOMM_run(SourceImgPath, SourceVidPath, generator, kp_detector, dir, Round, relativeTF = True):
   warnings.filterwarnings("ignore")
 
   source_image = imageio.imread(SourceImgPath)
@@ -63,5 +63,5 @@ def FOMM_run(SourceImgPath, SourceVidPath, generator, kp_detector, dir, relative
   predictions = make_animation(source_image, driving_video, generator, kp_detector, relative = relativeTF)
 
   #save resulting video
-  FOMMoutPath = f'./first_order_model/output/{dir}/' + ntpath.basename(SourceVidPath)[:-4] + '.mp4'
+  FOMMoutPath = f'./Output/FOMM/Round{Round}/{dir}.mp4'
   imageio.mimsave(FOMMoutPath, [img_as_ubyte(frame) for frame in predictions], fps=fps)

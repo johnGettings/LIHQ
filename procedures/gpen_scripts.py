@@ -6,9 +6,8 @@ import cv2
 from LIHQ.GPEN.face_enhancement import FaceEnhancement
 
 #Functions
-def GPEN_run(vidPath, Round):
-  vidName = ntpath.basename(vidPath)[:-4]
-  framesOutESR = f'./BasicSR/Out/Round{Round}/' + vidName
+def GPEN_run(dir, Round):
+  framesOutESR = f'./BasicSR/Out/Round{Round}/{dir}'
   filesIn = glob.glob(framesOutESR + '/*')
 
   for filex in filesIn:
@@ -17,7 +16,7 @@ def GPEN_run(vidPath, Round):
         
     model = {'name':'GPEN-BFR-512', 'size':512, 'channel_multiplier':2, 'narrow':1, 'use_cuda':True}
     
-    outdir = f'./GPEN/Out/{Round}/' + vidName + '/'
+    outdir = f'./GPEN/Out/{Round}/{dir}/'
     os.makedirs(outdir, exist_ok=True)
 
     faceenhancer = FaceEnhancement(use_sr=False, device='cuda', size=model['size'], model=model['name'], channel_multiplier=model['channel_multiplier'], narrow=model['narrow'])

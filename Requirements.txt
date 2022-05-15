@@ -6,7 +6,7 @@ opencv-contrib-python>=4.2.0.34 #Wav2Lip
 addict #ESRGAN
 tb-nightly #ESRGAN
 yapf #ESRGAN
-#PyYAML==5.1 #FOMM
+PyYAML==5.1 #FOMM
 einops #Tortoise
 entmax #Tortoise
 transformers #Tortoise

@@ -5,28 +5,20 @@ import torch.nn.functional as F
 import IPython
 import os
 
-from utils.audio import load_audio, get_voices
+from tortoise.utils.audio import load_voice, load_voices
 
 def tortoise_run(tts, text, voice, preset):
-  voices = get_voices()
-  cond_paths = voices[voice]
-  conds = []
-  for cond_path in cond_paths:
-      c = load_audio(cond_path, 22050)
-      conds.append(c)
+  voice_samples, conditioning_latents = load_voice(voice)
+  gen = tts.tts_with_preset(text, voice_samples=voice_samples,
+                          conditioning_latents=conditioning_latents, 
+                          preset=preset)
 
-  gen = tts.tts_with_preset(text, conds, preset)
   return gen
-  
-  
-def tortoise_combo_run(tts, text, voice1, voice2, preset):
-  conds = []
-  voices = get_voices()
-  for v in [voice1, voice2]:
-    cond_paths = voices[v]
-    for cond_path in cond_paths:
-        c = load_audio(cond_path, 22050)
-        conds.append(c)
 
-  gen = tts.tts_with_preset(text, conds, preset)
+def tortoise_combo_run(tts, text, voice1, voice2, preset):
+  voice_samples, conditioning_latents = load_voices([voice1, voice2])
+
+  gen = tts.tts_with_preset(text, voice_samples=voice_samples,
+                        conditioning_latents=conditioning_latents, 
+                        preset=preset)
   return gen

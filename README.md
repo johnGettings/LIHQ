@@ -52,3 +52,17 @@ Link to demonstration of various options
 LIHQ
 
 LIHQ Clean
+
+
+## Future Work
+
+Postprocessing will be made available in the future. I will add in functions that allow you to paste your speaker on a larger background or a video background.
+
+### Improving quality
+Two big issue here: 
+1) The speed of the program 
+2) The mouth movement
+
+Some fixes:
+1) Train a higher quality wav2LIP model
+2) Create a combo model that can mimic HQ Wav2Lip mouth movements + random blinking and head movements to eliminate the need for FOMM. It will also remove the need for face restoration 
