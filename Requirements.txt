@@ -1,11 +1,12 @@
 ######################################## Required For Colab Run
 #phonemizer==2.2.1 #VITS
 #Unidecode==1.1.1 #VITS
-ninja #GPEN
 opencv-contrib-python>=4.2.0.34 #Wav2Lip
-addict #ESRGAN
-tb-nightly #ESRGAN
-yapf #ESRGAN
+tb-nightly #GFPGAN
+yapf #GFPGAN
+basicsr>=1.3.4.0 #GFPGAN
+facexlib>=0.2.0.3 #GFPGAN
+addict #GFPGAN
 PyYAML==5.1 #FOMM
 einops #Tortoise
 entmax #Tortoise
@@ -24,48 +25,4 @@ pydub
 #Cython==0.29.21 #VITS
 #imageio==2.3.0 #FOMM
 #pytz==2018.5 #FOMM
-#future #ESRGAN
-#lmdb #ESRGAN
-#Pillow #ESRGAN
-#requests #ESRGAN
-
-
-########################################Double Versions
-#librosa==0.8.0 #VITS
-#librosa==0.7.0 #Wav2Lip
-
-#matplotlib==3.3.1 #VITS
-#matplotlib==2.2.2 #FOMM
-
-#numpy==1.18.5 #VITS
-#numpy==1.15.0 #FOMM
-#numpy==1.17.1 #Wav2Lip
-#numpy #ESRGAN, GPEN
-
-#scipy==1.5.2 #VITS
-#scipy==1.1.0 #FOMM
-#scipy #ESRGAN
-
-#torch==1.6.0 #VITS
-#torch==1.0.0 #FOMM
-#torch==1.1.0 #Wav2Lip
-#torch>=1.7 #ESRGAN
-#torch #GPEN
-
-#torchvision==0.7.0 #VITS
-#torchvision==0.2.1 #FOMM
-#torchvision==0.3.0 #Wav2Lip
-#torchvision #ESRGAN, GPEN
-
-#tqdm==4.24.0 #FOMM
-#tqdm==4.45.0 #Wav2Lip
-#tqdm #ESRGAN
-
-#PyYAML==5.1 #FOMM
-#pyyaml #ESRGAN
-
-#scikit-image==0.14.0 #FOMM
-#scikit-image #ESRGAN, GPEN
-
-#opencv-python==4.1.0.25 #Wav2Lip
-#opencv-python #ESRGAN, GPEN
+#lmdb #GFPGAN

@@ -8,8 +8,11 @@ import cv2
 
 
 #Get a list of all subfolders in audio directory
-def get_auddirnames():
-  audfolders = sorted(glob.glob("./input/audio/*/"))
+def get_auddirnames(audio_super):
+  audfolders = sorted(glob.glob(audio_super + "*/"))
+  if audfolders < 1:
+    print('Check your audio folder: ' + audio_super)
+    sys.exit()
   auddirnames = []
   for ff in audfolders:
     auddirnames.append(os.path.basename(os.path.dirname(ff)))
@@ -17,11 +20,11 @@ def get_auddirnames():
 
 #audiofiles should be in numerical order
 #removes everything except combined audio. Coimbined audio name is same as subfolder.
-def combine_audiofiles(dir):
-  audioFiles = sorted(glob.glob(f'./input/audio/{dir}/*'))
+def combine_audiofiles(dir, audio_super):
+  audioFiles = sorted(glob.glob(f'{audio_super}{dir}/*'))
   
   if len(audioFiles) > 1:
-    outfile = f'./input/audio/{dir}/{dir}.wav'
+    outfile = f'{audio_super}{dir}/{dir}.wav'
     data= []
     for infile in audioFiles:
         w = wave.open(infile, 'rb')
@@ -47,11 +50,8 @@ def vid2frames(vidPath, framesOutPath):
       frame += 1
 
 #Merging back into video
-def frames2vid(dir, Round):
-    audPath = glob.glob(f'./input/audio/{dir}/*')[0]
-    frames = f'./GPEN/Out/Round{Round}/{dir}/*.png'
-    outPath = f'./GPEN/Out/VidOutR{Round}/{dir}.mp4'
-    command = f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {frames} -i {audPath} -vcodec mpeg4 -b 20000k {outPath}'
+def frames2vid(audPath, framesInPath, vidOutPath):
+    command = f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {framesInPath} -i {audPath} -vcodec mpeg4 -b:v 20000k {vidOutPath}'
     try:
       subprocess.call(command, shell=True)
     except subprocess.CalledProcessError:

@@ -14,28 +14,28 @@ import moviepy.editor as mpe
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 
-def FOMM_chop_refvid(auddirnames, refVid, refVidOffset = [0]):
+def FOMM_chop_refvid(auddirnames, refVid, audio_super, refVidOffset):
   # Create chopped ref vids into segments the same length as the audio
   i = 0
   
+  offset = np.array(refVidOffset)
   if len(refVidOffset) < len(auddirnames):
-    offset = np.array(refVidOffset)
-    offsets = np.pad(offset, (0, len(auddirnames)-len(refVidOffset)), 'constant')
+    offset = np.pad(offset, (0, len(auddirnames)-len(refVidOffset)), 'constant')
   
   for dir in auddirnames:
-    os.mkdir(f'./first_order_model/input-ref-vid/{dir}')
-    audio = glob.glob(f'./input/audio/{dir}/*')[0]
+    os.makedirs(f'./first_order_model/input-ref-vid/{dir}', exist_ok=True)
+    audio = glob.glob(f'{audio_super}{dir}/*')[0]
     audioLength = librosa.get_duration(filename = audio)
 
     output_video_path = f'./first_order_model/input-ref-vid/{dir}/{dir}.mp4'
     with VideoFileClip(refVid) as video:
-      totalAudioLength = offsets[i] + audioLength
+      totalAudioLength = offset[i] + audioLength
       if video.duration < totalAudioLength:
         sys.exit('Reference video is shorter than audio. You can:',
                  'Chop audio to multiple folders, reduce video offset,',
                  'use a longer reference video, use shorter audio.')
       
-      new = video.subclip(offsets[i], offsets[i] + audioLength)
+      new = video.subclip(offset[i], offset[i] + audioLength)
       new.write_videofile(output_video_path, audio_codec='aac')
       i += 1
 
@@ -63,5 +63,5 @@ def FOMM_run(SourceImgPath, SourceVidPath, generator, kp_detector, dir, Round, r
   predictions = make_animation(source_image, driving_video, generator, kp_detector, relative = relativeTF)
 
   #save resulting video
-  FOMMoutPath = f'./Output/FOMM/Round{Round}/{dir}.mp4'
+  FOMMoutPath = f'./output/FOMM/Round{Round}/{dir}.mp4'
   imageio.mimsave(FOMMoutPath, [img_as_ubyte(frame) for frame in predictions], fps=fps)

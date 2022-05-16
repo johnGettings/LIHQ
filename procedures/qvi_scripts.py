@@ -1,8 +1,8 @@
 import configparser
 
-def qvi_config(frame_int):
+def qvi_config(dir, frame_int):
     config = configparser.ConfigParser()
-    config.testset_root = './output/GPEN/Round2'
+    config.testset_root = f'./output/GFPGAN/Round2/{dir}/'
     config.test_size = (1024, 1024)
     config.test_crop_size = (1024, 1024)
 
@@ -16,7 +16,7 @@ def qvi_config(frame_int):
     config.pwc_path = './QVI/utils/pwc-checkpoint.pt'
 
 
-    config.store_path = './output/QVI/'
+    config.store_path = './output/finalVidsOut/'
     config.checkpoint = './QVI/qvi_release/model.pt'
     
     return(config)
