@@ -10,13 +10,11 @@ os.chdir('./first_order_model')
 from LIHQ.procedures.fomm_scripts import FOMM_chop_refvid, FOMM_run
 os.chdir('..')
 from procedures.wav2lip_scripts import wav2lip_run
-from procedures.esrgan_scripts import ESRGAN_run
-os.chdir('./GPEN')
-from procedures.gpen_scripts import GPEN_run
-os.chdir('..')
 from first_order_model.demo import load_checkpoints
 from procedures.qvi_scripts import qvi_config
-from QVI.demo import main as qvi_main
+os.chdir('./QVI')
+from LIHQ.QVI.demo import main as qvi_main
+os.chdir('..')
 
 
 
@@ -28,10 +26,13 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
   
   # auddirnames is list of names of each folder in 'audio' folder = [Folder1, Folder2, Folder3]
   # Each audio folder should have one audio file, for one output video each dir in auddirnames
-  
+  if frame_int is not None:
+    fps = 25 * (frame_int + 1)
+  else:
+    fps = 25
   
   if clear_outputs == True:
-    for path in Path("./LIHQ/output").glob("**/*"):
+    for path in Path("./output").glob("**/*"):
         if path.is_file():
             path.unlink()
 
@@ -72,11 +73,12 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
   #Vid 2 Frames (Converting wav2Lip output to frames for next step)
   for dir in auddirnames:
     framesOutV2F = f'./output/vid2Frames/Round1/{dir}/'
-    vidPath = f'./Wav2Lip/output/{dir}.mp4'
+    vidPath = f'./output/wav2Lip/{dir}.mp4'
     os.makedirs(framesOutV2F, exist_ok=True)
     vid2frames(vidPath, framesOutV2F)
 
   #GFPGAN (Restoration and upscaling)
+  print("Beginning restoration and upscaling")
   os.chdir('GFPGAN')
   in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round1/{dir}/'
   out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round1/{dir}/'
@@ -88,13 +90,14 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
       print('!!!!!!! Error with GFPGAN command !!!!!!')
       sys.exit()
   os.chdir('..')
+  print('Completed Restoration Round 1')
 
   #frames2Vid (Converting frames back to video)
   for dir in auddirnames:
     audPath = glob.glob(f'{audio_super}{dir}/*')[0]
-    framesInPath = f'./output/GFPGAN/Round1/{dir}/*.png'
-    vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
-    frames2vid(audPath, framesInPath, vidOutPath)
+    framesInPath = f'./output/GFPGAN/Round1/{dir}/restored_imgs/%5d.png'
+    vidOutPath = f'./output/frames2Vid/Round1/{dir}.mp4'
+    frames2vid(25, audPath, framesInPath, vidOutPath)
   
   #Round1 Printouts
   print("Round 1 Complete!")
@@ -109,8 +112,8 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
   #FOMM Round 2
   i=0
   for dir in auddirnames:
-    refVideo = f'./output/frames2Vid/Round2/{dir}.mp4'
-    FOMM_run(face[i], refVideo, dir, Round = "2", relativeTF = False)
+    refVideo = f'./output/frames2Vid/Round1/{dir}.mp4'
+    FOMM_run(face[i], refVideo, generator, kp_detector, dir, Round = "2", relativeTF = False)
     i+=1
 
   #Vid2Frames R2
@@ -133,38 +136,46 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
       sys.exit()
   os.chdir('..')
   
-  
-  #Final Frames2Vid
-  for dir in auddirnames:
-    audPath = glob.glob(f'{audio_super}{dir}/*')[0]
-    framesInPath = f'./output/GFPGAN/Round2/{dir}/*.png'
-    vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
-    frames2vid(dir, Round = "2")
-  
   R2end = time.time()
   print("Round2 Elapsed Time")
   print(R2end - R2start)
   
 
-  # QVI (Frame interpolation)
   if frame_int == None:
+    #Final Frames2Vid
     for dir in auddirnames:
-      src = f'./output/frames2Vid/Round2/{dir}.mp4'
-      final_vids = f'./output/finalVidsOut/{dir}.mp4'
-      shutil.copyfile(src, final_vids)
+      audPath = glob.glob(f'{audio_super}{dir}/*')[0]
+      framesInPath = f'./output/GFPGAN/Round2/{dir}/restored_imgs/%5d.png'
+      vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
+      frames2vid(25, audPath, framesInPath, vidOutPath)
+      
   else:  
+    # QVI (Frame interpolation)
     print('Beginning Frame Interpolation.')
     QVIstart = time.time()
     for dir in auddirnames:
+      os.makedirs(f'./output/QVI/{dir}/', exist_ok=True)
       config = qvi_config(dir, frame_int)
+      os.chdir('QVI')
       qvi_main(config)
+      os.chdir('..')
+    
+      audPath = glob.glob(f'{audio_super}{dir}/*')[0]
+      framesInPath = f'./output/GFPGAN/Round2/{dir}/restored_imgs/%5d.png'
+      vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
+      frames2vid(fps, audPath, framesInPath, vidOutPath)
     
     print('Frame Interpolation Complete!')
     QVIend = time.time()
     print("QVI Elapsed Time")
     print(QVIend - QVIstart)
   
-  #Copying final video to out location
+  #Copying to final vids folder
+  src = f'./output/frames2Vid/Round2/{dir}.mp4'
+  final_vids = f'./output/finalVidsOut/{dir}.mp4'
+  shutil.copyfile(src, final_vids)
+  
+  #Copying final video to save_path
   if save_path != None:
     for dir in auddirnames:
       src = f'./output/finalVidsOut/{dir}.mp4'

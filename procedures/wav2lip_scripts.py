@@ -9,7 +9,7 @@ def wav2lip_run(dir):
   audPath = f'{os.getcwd()}/input/audio/{dir}/{dir}.wav'
   outPath = f'{os.getcwd()}/output/wav2Lip/{dir}.mp4'
   os.chdir('Wav2Lip')
-  command = f'python inference.py --checkpoint_path ./checkpoints/wav2lip_gan.pth --face {vidPath} --audio {audPath} --outfile {outPath}  --pads 0 30 0 0'
+  command = f'python inference.py --checkpoint_path ./checkpoints/wav2lip.pth --face {vidPath} --audio {audPath} --outfile {outPath}  --pads 0 20 0 0'
   try:
     subprocess.call(command, shell=True)
   except subprocess.CalledProcessError:

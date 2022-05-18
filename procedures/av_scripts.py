@@ -10,7 +10,7 @@ import cv2
 #Get a list of all subfolders in audio directory
 def get_auddirnames(audio_super):
   audfolders = sorted(glob.glob(audio_super + "*/"))
-  if audfolders < 1:
+  if len(audfolders) < 1:
     print('Check your audio folder: ' + audio_super)
     sys.exit()
   auddirnames = []
@@ -50,8 +50,8 @@ def vid2frames(vidPath, framesOutPath):
       frame += 1
 
 #Merging back into video
-def frames2vid(audPath, framesInPath, vidOutPath):
-    command = f'ffmpeg -y -r 25 -f image2 -pattern_type glob -i {framesInPath} -i {audPath} -vcodec mpeg4 -b:v 20000k {vidOutPath}'
+def frames2vid(fps, audPath, framesInPath, vidOutPath):
+    command = f'ffmpeg -y -r {fps} -f image2 -i {framesInPath} -i {audPath} -vcodec mpeg4 -b:v 20000k {vidOutPath}'
     try:
       subprocess.call(command, shell=True)
     except subprocess.CalledProcessError:
