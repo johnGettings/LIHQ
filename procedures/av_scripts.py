@@ -38,6 +38,9 @@ def combine_audiofiles(dir, audio_super):
 
     for filez in audioFiles:
       os.remove(filez)
+  
+  if len(audioFiles) == 1:
+    os.rename(audioFiles[0], str(os.path.dirname(audioFiles[0]))+ '/' + str(os.path.basename(os.path.dirname(audioFiles[0]))) + audioFiles[0][-4:])
 
 # converts video to frames; outpouts in 0000x.png to framesOutPath location
 def vid2frames(vidPath, framesOutPath):

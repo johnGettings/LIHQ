@@ -18,14 +18,12 @@ os.chdir('..')
 
 
 
-def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = 3, clear_outputs=False):
+def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = 2, clear_outputs=False):
   
   ##### Error catching
   #if save path is a real path
   #make sure face and refvidoffset are arrays
   
-  # auddirnames is list of names of each folder in 'audio' folder = [Folder1, Folder2, Folder3]
-  # Each audio folder should have one audio file, for one output video each dir in auddirnames
   if frame_int is not None:
     fps = 25 * (frame_int + 1)
   else:
@@ -67,8 +65,14 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
   #Wav2Lip (Generating lip movement from audio)
   print("Running Wav2Lip")
   for dir in auddirnames:
+    w2l_strt = time.time()
     wav2lip_run(dir)
-  print("Wav2Lip Success!")
+    w2l_end = time.time()
+    if w2l_end - w2l_strt < 9:
+      print(f'!!! Wav2Lip LIKELY DID NOT WORK FOR {dir} !!!')
+      print(f'Either your paths are wrong or it could not detect a face.')
+      print(f'If you are trying an animated character, the image may not work.')
+  print('Wav2Lip Complete')
 
   #Vid 2 Frames (Converting wav2Lip output to frames for next step)
   for dir in auddirnames:
@@ -80,9 +84,9 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
   #GFPGAN (Restoration and upscaling)
   print("Beginning restoration and upscaling")
   os.chdir('GFPGAN')
-  in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round1/{dir}/'
-  out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round1/{dir}/'
   for dir in auddirnames:
+    in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round1/{dir}/'
+    out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round1/{dir}/'
     command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
     try:
       subprocess.call(command, shell=True)
@@ -125,9 +129,9 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
 
   #GFPGAN (Restoration and upscaling)
   os.chdir('GFPGAN')
-  in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round2/{dir}/'
-  out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round2/{dir}/'
   for dir in auddirnames:
+    in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round2/{dir}/'
+    out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round2/{dir}/'
     command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
     try:
       subprocess.call(command, shell=True)
@@ -163,7 +167,8 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
       audPath = glob.glob(f'{audio_super}{dir}/*')[0]
       framesInPath = f'./output/GFPGAN/Round2/{dir}/restored_imgs/%5d.png'
       vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
-      frames2vid(fps, audPath, framesInPath, vidOutPath)
+      command = f'ffmpeg -y -r \'{fps}\' -f image2 -pattern_type glob -i \'{framesInPath}\' -i \'{audPath}\' -vcodec mpeg4 -b:v 20000k \'{vidOutPath}\''
+      subprocess.call(command, shell=True)
     
     print('Frame Interpolation Complete!')
     QVIend = time.time()
@@ -171,9 +176,10 @@ def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_
     print(QVIend - QVIstart)
   
   #Copying to final vids folder
-  src = f'./output/frames2Vid/Round2/{dir}.mp4'
-  final_vids = f'./output/finalVidsOut/{dir}.mp4'
-  shutil.copyfile(src, final_vids)
+  for dir in auddirnames:
+    src = f'./output/frames2Vid/Round2/{dir}.mp4'
+    final_vids = f'./output/finalVidsOut/{dir}.mp4'
+    shutil.copyfile(src, final_vids)
   
   #Copying final video to save_path
   if save_path != None:
