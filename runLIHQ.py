@@ -1,9 +1,10 @@
 import os
 import glob
-import ntpath
 import shutil
 from pathlib import Path
 import time
+import subprocess
+import argparse
 
 from procedures.av_scripts import *
 os.chdir('./first_order_model')
@@ -18,172 +19,207 @@ os.chdir('..')
 
 
 
-def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = 2, clear_outputs=False):
-  
-  ##### Error catching
-  #if save path is a real path
-  #make sure face and refvidoffset are arrays
-  
-  if frame_int is not None:
-    fps = 25 * (frame_int + 1)
-  else:
-    fps = 25
-  
-  if clear_outputs == True:
-    for path in Path("./output").glob("**/*"):
-        if path.is_file():
-            path.unlink()
+#def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = 2, clear_outputs=False):
+if __name__ == '__main__':
+    # define cmd arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--face', type=str, required=True,
+                        help='Path to face image(s). Can be array, one face for each audio folder.')
+    parser.add_argument('--audio_super', type=str, default='./input/audio/',
+                        help='Root folder location for your audio folders.')
+    parser.add_argument('--ref_vid', type=str, default='./input/ref_vid/syn_reference.mp4',
+                        help='Path to reference video.')
+    parser.add_argument('--ref_vid_offset', type=int, default=2,
+                        help='Start point of where to crop ref video, in seconds. Dictates head and eye movement. Can be array.')
+    parser.add_argument('--frame_int', type=int, default=2,
+                        help='Optional frame interpolation for smoother output. None = 25fps, 1 = 50fps, 2 = 75fps, etc.')
+    parser.add_argument('--clear_outputs', type=bool, default=True,
+                        help='Deletes everything in the ./LIHQ/output folder before next run.')
+    parser.add_argument('--save_path', type=str, default=None,
+                        help='Path to save final videos. Optional, as videos are already saved in ./output/finalVidsOut.')
+    args = parser.parse_args()
 
-  R1start = time.time()
-  
-  #A/V Set up
-  print("Performing Set Up")
-  if audio_super[-1:] != '/':
-    audio_super = audio_super + '/'
-  auddirnames = get_auddirnames(audio_super)
-  for dir in auddirnames:
-    combine_audiofiles(dir, audio_super)
-  
-    #expanding face array as needed
-  while len(face) < len(auddirnames):
-    face.append(face[0])
-  
-  #FOMM
-    #Cropping reference video
-  FOMM_chop_refvid(auddirnames, ref_vid, audio_super, ref_vid_offset)
-  
-    #Running FOMM (Mimicking facial movements from reference video)
-  print("Running First Order Motion Model")
-  generator, kp_detector = load_checkpoints(config_path='./first_order_model/config/vox-256.yaml', checkpoint_path='./first_order_model/vox-cpk.pth.tar')
-  i = 0
-  for dir in auddirnames:
-    sub_clip = f'./first_order_model/input-ref-vid/{dir}/{dir}.mp4'
-    FOMM_run(face[i], sub_clip, generator, kp_detector, dir, Round = "1")
-    i+=1
-  print("FOMM Success!")
+    face = args.face
+    save_path = args.save_path
+    audio_super = args.audio_super
+    ref_vid = args.ref_vid
+    ref_vid_offset = args.ref_vid_offset
+    frame_int = args.frame_int
+    clear_outputs = args.clear_outputs
 
-  #Wav2Lip (Generating lip movement from audio)
-  print("Running Wav2Lip")
-  for dir in auddirnames:
-    w2l_strt = time.time()
-    wav2lip_run(dir)
-    w2l_end = time.time()
-    if w2l_end - w2l_strt < 9:
-      print(f'!!! Wav2Lip LIKELY DID NOT WORK FOR {dir} !!!')
-      print(f'Either your paths are wrong or it could not detect a face.')
-      print(f'If you are trying an animated character, the image may not work.')
-  print('Wav2Lip Complete')
 
-  #Vid 2 Frames (Converting wav2Lip output to frames for next step)
-  for dir in auddirnames:
-    framesOutV2F = f'./output/vid2Frames/Round1/{dir}/'
-    vidPath = f'./output/wav2Lip/{dir}.mp4'
-    os.makedirs(framesOutV2F, exist_ok=True)
-    vid2frames(vidPath, framesOutV2F)
+    #Miscellaneous things
+    print("Initializing")
+      #Turning face &offset to arrays as needed
+    if not isinstance(face, list):
+        face = [face]
+    if not isinstance(ref_vid_offset, list):
+        ref_vid_offset = [ref_vid_offset]
 
-  #GFPGAN (Restoration and upscaling)
-  print("Beginning restoration and upscaling")
-  os.chdir('GFPGAN')
-  for dir in auddirnames:
-    in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round1/{dir}/'
-    out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round1/{dir}/'
-    command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
-    try:
-      subprocess.call(command, shell=True)
-    except subprocess.CalledProcessError:
-      print('!!!!!!! Error with GFPGAN command !!!!!!')
-      sys.exit()
-  os.chdir('..')
-  print('Completed Restoration Round 1')
+      #Determining final fps for ffmpeg
+    if frame_int is not None:
+        fps = 25 * (frame_int + 1)
+    else:
+        fps = 25
 
-  #frames2Vid (Converting frames back to video)
-  for dir in auddirnames:
-    audPath = glob.glob(f'{audio_super}{dir}/*')[0]
-    framesInPath = f'./output/GFPGAN/Round1/{dir}/restored_imgs/%5d.png'
-    vidOutPath = f'./output/frames2Vid/Round1/{dir}.mp4'
-    frames2vid(25, audPath, framesInPath, vidOutPath)
-  
-  #Round1 Printouts
-  print("Round 1 Complete!")
-  R1end = time.time()
-  print("Round1 Elapsed Time:")
-  print(R1end - R1start)
+      #Deleteing output files
+    if clear_outputs == True:
+        for path in Path("./output").glob("**/*"):
+            if path.is_file():
+                path.unlink()
 
- #### Round 2
-  print("Beginning Round 2")
-  R2start = time.time()
-  
-  #FOMM Round 2
-  i=0
-  for dir in auddirnames:
-    refVideo = f'./output/frames2Vid/Round1/{dir}.mp4'
-    FOMM_run(face[i], refVideo, generator, kp_detector, dir, Round = "2", relativeTF = False)
-    i+=1
+      #A/V Set up
+    R1start = time.time()
+    if audio_super[-1:] != '/':
+        audio_super = audio_super + '/'
+    aud_dir_names = get_auddirnames(audio_super)
+    for adir in aud_dir_names:
+        combine_audiofiles(adir, audio_super)
 
-  #Vid2Frames R2
-  for dir in auddirnames:
-    framesOutV2F = f'./output/vid2Frames/Round2/{dir}/'
-    vidPath = f'./output/FOMM/Round2/{dir}.mp4'
-    os.makedirs(framesOutV2F, exist_ok=True)
-    vid2frames(vidPath, framesOutV2F)
+      #Expanding face array as needed
+    while len(face) < len(aud_dir_names):
+        face.append(face[0])
 
-  #GFPGAN (Restoration and upscaling)
-  os.chdir('GFPGAN')
-  for dir in auddirnames:
-    in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round2/{dir}/'
-    out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round2/{dir}/'
-    command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
-    try:
-      subprocess.call(command, shell=True)
-    except subprocess.CalledProcessError:
-      print('!!!!!!! Error with GFPGAN command !!!!!!')
-      sys.exit()
-  os.chdir('..')
-  
-  R2end = time.time()
-  print("Round2 Elapsed Time")
-  print(R2end - R2start)
-  
+    #FOMM
+      #Cropping reference video
+    FOMM_chop_refvid(aud_dir_names, ref_vid, audio_super, ref_vid_offset)
 
-  if frame_int == None:
-    #Final Frames2Vid
-    for dir in auddirnames:
-      audPath = glob.glob(f'{audio_super}{dir}/*')[0]
-      framesInPath = f'./output/GFPGAN/Round2/{dir}/restored_imgs/%5d.png'
-      vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
-      frames2vid(25, audPath, framesInPath, vidOutPath)
-      
-  else:  
-    # QVI (Frame interpolation)
-    print('Beginning Frame Interpolation.')
-    QVIstart = time.time()
-    for dir in auddirnames:
-      os.makedirs(f'./output/QVI/{dir}/', exist_ok=True)
-      config = qvi_config(dir, frame_int)
-      os.chdir('QVI')
-      qvi_main(config)
-      os.chdir('..')
+      #Running FOMM (Mimicking facial movements from reference video)
+    print("Running First Order Motion Model")
+    generator, kp_detector = load_checkpoints(config_path='./first_order_model/config/vox-256.yaml', checkpoint_path='./first_order_model/vox-cpk.pth.tar')
+    i = 0
+    for adir in aud_dir_names:
+        sub_clip = f'./first_order_model/input-ref-vid/{adir}/{adir}.mp4'
+        FOMM_run(face[i], sub_clip, generator, kp_detector, adir, Round = "1")
+        i+=1
+    print("FOMM Success!")
+
+    #Wav2Lip (Generating lip movement from audio)
+    print("Running Wav2Lip")
+    for adir in aud_dir_names:
+        wav2lip_run(adir)
+    w2l_folders = sorted(glob.glob('./output/wav2Lip/*)'))
+    if len(w2l_folders) < len(aud_dir_names):
+        print('Wav2Lip could not generate at least one of your videos. ',
+              'Most likely it could not detect a face. ',
+              'Or possibly there is an error with the file paths.')
+        sys.exit()
+    else:
+        print('Wav2Lip Complete')
+
+    #Vid 2 Frames (Converting wav2Lip output to frames for next step)
+    for adir in aud_dir_names:
+        frames_out_V2F = f'./output/vid2Frames/Round1/{adir}/'
+        vidPath = f'./output/wav2Lip/{adir}.mp4'
+        os.makedirs(frames_out_V2F, exist_ok=True)
+        vid2frames(vidPath, frames_out_V2F)
+
+    #GFPGAN (Restoration and upscaling)
+    print("Beginning restoration and upscaling")
+    os.chdir('GFPGAN')
+    for adir in aud_dir_names:
+        in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round1/{adir}/'
+        out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round1/{adir}/'
+        command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
+        try:
+            subprocess.call(command, shell=True)
+        except subprocess.CalledProcessError:
+            print('!!!!!!! Error with GFPGAN command !!!!!!')
+            sys.exit()
+    os.chdir('..')
+    print('Completed Restoration Round 1')
+
+    #frames2Vid (Converting frames back to video)
+    for adir in aud_dir_names:
+        aud_path = glob.glob(f'{audio_super}{adir}/*')[0]
+        frames_in_path = f'./output/GFPGAN/Round1/{adir}/restored_imgs/%5d.png'
+        vid_out_path = f'./output/frames2Vid/Round1/{adir}.mp4'
+        frames2vid(25, aud_path, frames_in_path, vid_out_path)
+
+    #Round1 Printouts
+    print("Round 1 Complete!")
+    R1end = time.time()
+    print("Round1 Elapsed Time:")
+    print(R1end - R1start)
+
+  #### Round 2
+    print("Beginning Round 2")
+    R2start = time.time()
+
+    #FOMM Round 2
+    i=0
+    for adir in aud_dir_names:
+        ref_video = f'./output/frames2Vid/Round1/{adir}.mp4'
+        FOMM_run(face[i], ref_video, generator, kp_detector, dir, Round = "2", relativeTF = False)
+        i+=1
+
+    #Vid2Frames R2
+    for adir in aud_dir_names:
+        frames_out_V2F = f'./output/vid2Frames/Round2/{adir}/'
+        vid_path = f'./output/FOMM/Round2/{adir}.mp4'
+        os.makedirs(frames_out_V2F, exist_ok=True)
+        vid2frames(vid_path, frames_out_V2F)
+
+    #GFPGAN (Restoration and upscaling)
+    os.chdir('GFPGAN')
+    for adir in aud_dir_names:
+        in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round2/{adir}/'
+        out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round2/{adir}/'
+        command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
+        try:
+            subprocess.call(command, shell=True)
+        except subprocess.CalledProcessError:
+            print('!!!!!!! Error with GFPGAN command !!!!!!')
+            sys.exit()
+    os.chdir('..')
+
+    R2end = time.time()
+    print("Round2 Elapsed Time")
+    print(R2end - R2start)
+
+
+    if frame_int is None:
+      #Final Frames2Vid
+        for adir in aud_dir_names:
+            aud_path = glob.glob(f'{audio_super}{adir}/*')[0]
+            frames_in_path = f'./output/GFPGAN/Round2/{adir}/restored_imgs/%5d.png'
+            vid_out_path = f'./output/frames2Vid/Round2/{adir}.mp4'
+            frames2vid(25, aud_path, frames_in_path, vid_out_path)
+
+    else:
+        # QVI (Frame interpolation)
+        print('Beginning Frame Interpolation.')
+        QVIstart = time.time()
+        for adir in aud_dir_names:
+            os.makedirs(f'./output/QVI/{adir}/', exist_ok=True)
+            config = qvi_config(adir, frame_int)
+            os.chdir('QVI')
+            qvi_main(config)
+            os.chdir('..')
+
+        aud_path = glob.glob(f'{audio_super}{adir}/*')[0]
+        frames_in_path = f'./output/QVI/{adir}/restored_imgs/*'
+        vid_out_path = f'./output/frames2Vid/Round2/{adir}.mp4'
+        command = f'ffmpeg -y -r \'{fps}\' -f image2 -pattern_type glob -i \'{frames_in_path}\' -i \'{aud_path}\' -vcodec mpeg4 -b:v 20000k \'{vid_out_path}\''
+        subprocess.call(command, shell=True)
+
+        print('Frame Interpolation Complete!')
+        QVIend = time.time()
+        print("QVI Elapsed Time")
+        print(QVIend - QVIstart)
+
+    #Copying to final vids folder
+    for adir in aud_dir_names:
+        src = f'./output/frames2Vid/Round2/{adir}.mp4'
+        final_vids = f'./output/finalVidsOut/{adir}.mp4'
+        shutil.copyfile(src, final_vids)
+
+    #Copying final video to save_path
+    if save_path != None:
+        for adir in aud_dir_names:
+            src = f'./output/finalVidsOut/{adir}.mp4'
+            shutil.copyfile(src, save_path)
+
+    print('Complete!')
+    print('Check ./LIHQ/output/finalVidsOut and your save_path if one was set.')
     
-      audPath = glob.glob(f'{audio_super}{dir}/*')[0]
-      framesInPath = f'./output/GFPGAN/Round2/{dir}/restored_imgs/%5d.png'
-      vidOutPath = f'./output/frames2Vid/Round2/{dir}.mp4'
-      command = f'ffmpeg -y -r \'{fps}\' -f image2 -pattern_type glob -i \'{framesInPath}\' -i \'{audPath}\' -vcodec mpeg4 -b:v 20000k \'{vidOutPath}\''
-      subprocess.call(command, shell=True)
-    
-    print('Frame Interpolation Complete!')
-    QVIend = time.time()
-    print("QVI Elapsed Time")
-    print(QVIend - QVIstart)
-  
-  #Copying to final vids folder
-  for dir in auddirnames:
-    src = f'./output/frames2Vid/Round2/{dir}.mp4'
-    final_vids = f'./output/finalVidsOut/{dir}.mp4'
-    shutil.copyfile(src, final_vids)
-  
-  #Copying final video to save_path
-  if save_path != None:
-    for dir in auddirnames:
-      src = f'./output/finalVidsOut/{dir}.mp4'
-      shutil.copyfile(src, save_path)
-  
