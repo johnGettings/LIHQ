@@ -135,4 +135,4 @@ def align_face(filepath,predictor):
 
         # Save aligned image.
         imgs.append(img)
-    return imgs
+    return imgs, crop

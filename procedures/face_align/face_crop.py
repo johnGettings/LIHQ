@@ -25,9 +25,13 @@ def crop_face(filename, outfile):
   toTensor = torchvision.transforms.ToTensor()
 
   images = []
-  for face in align_face(filename,predictor):
+  for face, crop in align_face(filename,predictor):
     face = toPIL(toTensor(face).unsqueeze(0).cuda().cpu().detach().clamp(0,1)[0])
     images.append(face)
     face.save(outfile)
+    
+    print(f'Cropped Image Width: {crop[2]-crop[0]}')
+    print(f'Cropped Image Height: {crop[3]-crop[1]}')
+    print(f'Cropped Image Offset: [{crop[1]}, {crop[0]}]')
 
   if(len(images)==0): raise Exception("No faces found. Try again with a different image.")
