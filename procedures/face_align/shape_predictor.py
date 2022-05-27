@@ -1,17 +1,12 @@
 import numpy as np
 import PIL
 import PIL.Image
-import sys
-import os
-import glob
 import scipy
 import scipy.ndimage
 import dlib
-from drive import open_url
 from pathlib import Path
-import argparse
 from bicubic import BicubicDownSample
-import torchvision
+import math
 
 """
 brief: face alignment with FFHQ method (https://github.com/NVlabs/ffhq-dataset)
@@ -84,6 +79,26 @@ def align_face(filepath,predictor):
         quad = np.stack([c - x - y, c - x + y, c + x + y, c + x - y])
         qsize = np.hypot(*x) * 2
 
+        #Getting rotation, crop size, and offset
+        o = quad[1][1] - quad[2][1]
+        a = quad[2][0] - quad[1][0]
+        theta = math.atan(o/a)
+        deg = math.degrees(theta)
+        print(f"Rotation: {round(deg, 2)} degrees")
+
+        crop_size = math.sqrt((quad[3][0] - quad[0][0])**2 + (quad[0][1] - quad[3][1])**2)
+        print(f'Crop size: {round(crop_size)} x {round(crop_size)}')
+
+        ox, oy = (sum([quad[0][0], quad[1][0], quad[2][0], quad[3][0]])/4,
+                     sum([-quad[0][1], -quad[1][1], -quad[2][1], -quad[3][1]])/4)
+        px, py = (quad[0][0], -quad[0][1])
+        angle = deg
+
+        qx = ox + math.cos(math.radians(angle)) * (px - ox) + math.sin(math.radians(angle)) * (py - oy)
+        qy = oy - math.sin(math.radians(angle)) * (px - ox) + math.cos(math.radians(angle)) * (py - oy)
+
+        print(f'Offset: [{-round(qy)}, {round(qx)}]')       
+
         # read image
         img = PIL.Image.open(filepath)
 
@@ -135,4 +150,4 @@ def align_face(filepath,predictor):
 
         # Save aligned image.
         imgs.append(img)
-    return imgs, crop
+    return imgs

@@ -19,34 +19,7 @@ os.chdir('..')
 
 
 
-#def run(face, save_path = None, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = 2, clear_outputs=False):
-if __name__ == '__main__':
-    # define cmd arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--face', type=str, required=True,
-                        help='Path to face image(s). Can be array, one face for each audio folder.')
-    parser.add_argument('--audio_super', type=str, default='./input/audio/',
-                        help='Root folder location for your audio folders.')
-    parser.add_argument('--ref_vid', type=str, default='./input/ref_vid/syn_reference.mp4',
-                        help='Path to reference video.')
-    parser.add_argument('--ref_vid_offset', type=int, default=2,
-                        help='Start point of where to crop ref video, in seconds. Dictates head and eye movement. Can be array.')
-    parser.add_argument('--frame_int', type=int, default=2,
-                        help='Optional frame interpolation for smoother output. None = 25fps, 1 = 50fps, 2 = 75fps, etc.')
-    parser.add_argument('--clear_outputs', type=bool, default=True,
-                        help='Deletes everything in the ./LIHQ/output folder before next run.')
-    parser.add_argument('--save_path', type=str, default=None,
-                        help='Path to save final videos. Optional, as videos are already saved in ./output/finalVidsOut.')
-    args = parser.parse_args()
-
-    face = args.face
-    save_path = args.save_path
-    audio_super = args.audio_super
-    ref_vid = args.ref_vid
-    ref_vid_offset = args.ref_vid_offset
-    frame_int = args.frame_int
-    clear_outputs = args.clear_outputs
-
+def run(face, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LIHQ/input/ref_vid/syn_reference.mp4', ref_vid_offset = [0], frame_int = None, clear_outputs=True, save_path = None):
 
     #Miscellaneous things
     print("Initializing")
@@ -98,7 +71,7 @@ if __name__ == '__main__':
     print("Running Wav2Lip")
     for adir in aud_dir_names:
         wav2lip_run(adir)
-    w2l_folders = sorted(glob.glob('./output/wav2Lip/*)'))
+    w2l_folders = sorted(glob.glob('./output/wav2Lip/*'))
     if len(w2l_folders) < len(aud_dir_names):
         print('Wav2Lip could not generate at least one of your videos. ',
               'Most likely it could not detect a face. ',
@@ -126,6 +99,7 @@ if __name__ == '__main__':
         except subprocess.CalledProcessError:
             print('!!!!!!! Error with GFPGAN command !!!!!!')
             sys.exit()
+        print(f'Finished {adir}')
     os.chdir('..')
     print('Completed Restoration Round 1')
 
@@ -150,7 +124,7 @@ if __name__ == '__main__':
     i=0
     for adir in aud_dir_names:
         ref_video = f'./output/frames2Vid/Round1/{adir}.mp4'
-        FOMM_run(face[i], ref_video, generator, kp_detector, dir, Round = "2", relativeTF = False)
+        FOMM_run(face[i], ref_video, generator, kp_detector, adir, Round = "2", relativeTF = False)
         i+=1
 
     #Vid2Frames R2
@@ -197,11 +171,11 @@ if __name__ == '__main__':
             qvi_main(config)
             os.chdir('..')
 
-        aud_path = glob.glob(f'{audio_super}{adir}/*')[0]
-        frames_in_path = f'./output/QVI/{adir}/restored_imgs/*'
-        vid_out_path = f'./output/frames2Vid/Round2/{adir}.mp4'
-        command = f'ffmpeg -y -r \'{fps}\' -f image2 -pattern_type glob -i \'{frames_in_path}\' -i \'{aud_path}\' -vcodec mpeg4 -b:v 20000k \'{vid_out_path}\''
-        subprocess.call(command, shell=True)
+            aud_path = glob.glob(f'{audio_super}{adir}/*')[0]
+            frames_in_path = f'./output/QVI/{adir}/restored_imgs/*'
+            vid_out_path = f'./output/frames2Vid/Round2/{adir}.mp4'
+            command = f'ffmpeg -y -r \'{fps}\' -f image2 -pattern_type glob -i \'{frames_in_path}\' -i \'{aud_path}\' -vcodec mpeg4 -b:v 20000k \'{vid_out_path}\''
+            subprocess.call(command, shell=True)
 
         print('Frame Interpolation Complete!')
         QVIend = time.time()

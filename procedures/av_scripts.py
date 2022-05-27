@@ -22,6 +22,18 @@ def get_auddirnames(audio_super):
 #removes everything except combined audio. Coimbined audio name is same as subfolder.
 def combine_audiofiles(adir, audio_super):
   audio_files = sorted(glob.glob(f'{audio_super}{adir}/*'))
+
+  #converting mp3 to .wav
+  for audio in audio_files:
+    if audio[-4:] != '.mp3' and audio[-4:] != '.wav':
+      sys.exit('LIHQ currently only supports mp3 and wav audio files.')
+
+    if audio[-4:] == '.mp3':
+      sound = AudioSegment.from_mp3(audio)
+      sound.export(audio[:-3] + 'wav', format="wav")
+      os.remove(audio)
+
+  audio_files = sorted(glob.glob(f'{audio_super}{adir}/*'))
   
   #If is more than one audio file, combine them
   if len(audio_files) > 1:
