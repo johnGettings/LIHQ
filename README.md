@@ -3,7 +3,7 @@
 
 LIHQ is not a new architecture, it is an application that utilizes several open source deep learning models to generate an artifical speaker of your own design. It was built to be run in google colab to take advantage of free/ cheap GPU with basically zero setup and designed to be as user friendly as I could make it. It was not created for deepfake purposes but you can give it a try if you want (See LIHQ Examples colab and Demo Video). You will find that some voices or faces images will not give your desired output and will take a little trial and error to get right. LIHQ really works best with a stylegan2 face and a simple narrator voice. Creating a simple speaker video with a styleGAN2 face and a simple TorToiSe voice is very straightforward and often produces good output.
 
-![LIHQ Examples](./docs/LIHQ_gif.png)
+![LIHQ Examples](./docs/demo_gif.gif)
 
 ## How it works
 #### Steps you need to take:
@@ -29,7 +29,7 @@ LIHQ will first transfer head and eye movement from my default reference video t
 
 ## Demo Video
 
-[![LIHQ Demo Video](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+[![LIHQ Demo Video](https://img.youtube.com/vi/nPAV-jpTzqI/0.jpg)](https://www.youtube.com/watch?v=nPAV-jpTzqI)
 
 ## Colabs
 
