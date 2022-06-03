@@ -1,68 +1,47 @@
 # LIHQ
 #### Long-Inference, High Quality Synthetic Speaker
 
-This project is fully functional but a work in progress. It is currently designed for google colab because I do not have a local GPU that can compete with what colab offers so I have not tested locally. In the future I will redesign for local applications as well. If there is a lot of demand for a local version I will work on it sooner rather than later. I will continue to tweak parameters to achieve best possible output. If a newer model comes along that outperforms one that LIHQ utilizes, I will replace it. (And please let me know if you think you found something that will work better!) This can be a very collaborative project as well, if the community wishes.
+LIHQ is not a new architecture, it is an application that utilizes several open source deep learning models to generate an artifical speaker of your own design. It was built to be run in google colab to take advantage of free/ cheap GPU with basically zero setup and designed to be as user friendly as I could make it. It was not created for deepfake purposes but you can give it a try if you want (See LIHQ Examples colab and Demo Video). You will find that some voices or faces images will not give your desired output and will take a little trial and error to get right. LIHQ really works best with a stylegan2 face and a simple narrator voice. Creating a simple speaker video with a styleGAN2 face and a simple TorToiSe voice is very straightforward and often produces good output.
 
-## Inference time
-When I say 'long-inference,' I mean it. LIHQ is running up to eight DNNs if you choose to use every feature. This is meant for short hobby projects, not long videos or commercial applications. See below for expected inference times.
+![LIHQ Examples](./docs/LIHQ_gif.png)
 
 ## How it works
-#### Things you need to do:
+#### Steps you need to take:
 
-1) Setup
-
-2) Create/ Upload Audio
-
-3) Upload Speaker Face Image
-
+1) Run Setup
+2) Create/ Upload Audio (TorToiSe, VITS)
+3) Upload Speaker Face Image (StyleGAN2 preferred)
 4) (Optional) Add reference video
+5) (Optional) Replace Background
 
-4) (Optional) Upload Background
+#### Steps the program takes:
 
-#### Things the program does:
+6) Face/ Head Motion Transfer (FOMM)
+7) Mouth Motion Generation (Wav2Lip)
+8) Upscale and Restoration (GFPGAN)
+9) Second Run Through (FOMM and GFPGAN)
+10) (Optional) Frame Interpolation (QVI) (Noticable improvement but LONG inference)
+11) (Optional) Background Matting (MODNet)
 
-5) Face/ Head Motion Transfer (FOMM)
+Pick out an image of a face that is forward-facing with a closed mouth (https://github.com/NVlabs/stylegan2) and upload or create audio of anyone you want using TorToiSe (built into the LIHQ colab) https://github.com/neonbjb/tortoise-tts
 
-6) Mouth Motion Generation (Wav2Lip)
+LIHQ will first transfer head and eye movement from my default reference video to your face image using a First Order Motion Model. Wav2Lip will then create mouth movement from your audio and paste it onto the FOMM output. Since the output is a very low resolution (256x256) we need to run through a face restoration & super resolution model. Repeating this process a second time will make the video look even better. And if you want it to be the highest quality, you can add frame interpolation at the end to increase the fps.
 
-7) Upscale and Restoration (ESRGAN & GPEN)
+## Demo Video
 
-8) (Optional) but Recommended Second Run Through
-
-9) (Optional) Frame Interpolation
-
-10) (Optional) Greenscreen background
-
-Pick out an image of a face that is forward-facing with a closed mouth and upload or create audio of anyone you want using TorToiSe (built into the LIHQ colab) https://github.com/neonbjb/tortoise-tts
-
-LIHQ will first transfer head and eye movement from my default reference video to your face image using a First Order Motion Model. Wav2Lip will then create mouth movement from your audio and paste it onto the FOMM output. Since the output is a very low resolution we need to run through a face restoration & super resolution model. Repeating this process a second time will make the video look even better. And if you want it to be the highest quality, you can add frame interpolation to increase the fps.
-
-## Parameters
-
-The only two critical parameters is your audio and your face. If you wish, you can add a background or greenscreen. You may choose the output quality and framerate if you want a faster inference time. Each of the individual models have various parameters you can play around with as well, but you would need to change those in the procedures.py file. I have played with them a lot and the ones I recommend.
-
-## Demo Videos
-
-Link to main demo
-
-Link to demonstration of various options
+[![LIHQ Demo Video](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
 
 ## Colabs
 
-LIHQ
+The google colabs have a lot of information, tips and tricks that I will not be putting in the README. LIHQ has a cell for every feature you might want or need with an explanation of everything. It is lengthy and a little cluttered but I recommend reading through everything. LIHQ Examples has four different examples, trimmed down to only what you need for each example.
 
-LIHQ Clean
+[LIHQ](https://colab.research.google.com/drive/1fKZl59AVDR4oGvlhVXdyCUGuozpnbIgQ?usp=sharing)
 
+[LIHQ Examples](https://colab.research.google.com/drive/1rIgl8J-EMJ4BcSPjKNsVk8BdproD98WW?usp=sharing)
 
-## Future Work
-
-Postprocessing will be made available in the future. I will add in functions that allow you to paste your speaker on a larger background or a video background.
-
-### Improving quality
-Two big issue here: 
-1) The speed of the program 
-2) The mouth movement
-
-Some fixes:
-1) Train a higher quality wav2LIP model
-2) Create a combo model that can mimic HQ Wav2Lip mouth movements + random blinking and head movements to eliminate the need for FOMM. It will also remove the need for face restoration 
+## Possible Future Work
+- Create more reference videos. Lip movement seems to work best at ref_vid_offset = 0 and I don't think this is coincidence. I think it has to do with the FOMM  movement transfer. I may create more reference videos of shorter length, and with varying emotions.
+- Make wav2LIP, FOMM optional. If you want to use reference video with correct lip movement, or a speaker video that already contains target speaker.
+- Add randomizer to ref vid offset
+- Expand post-processing capabilities
+- Revise for local use. I'm not sure what it would take. It's probably 95% there, I just simply haven't tried outside of colab.
