@@ -5,6 +5,7 @@ import sys
 
 import cv2
 from pydub import AudioSegment
+from IPython.display import display
 
 
 #Get a list of all subfolders in audio directory
@@ -35,11 +36,11 @@ def combine_audiofiles(adir, audio_super):
 
   audio_files = sorted(glob.glob(f'{audio_super}{adir}/*'))
   
-  #If is more than one audio file, combine them
+  #If it's more than one audio file, combine them
   if len(audio_files) > 1:
     speech = AudioSegment.from_wav(audio_files[0])
     
-    for i in range(len(audio_files)-1):
+    for i in range(len(audio_files)):
       if i > 0:
         speech_n = AudioSegment.from_wav(audio_files[i])
         speech = speech + speech_n
@@ -55,6 +56,23 @@ def combine_audiofiles(adir, audio_super):
   if len(audio_files) == 0:
     print('Missing audio in your audio folder.')
     sys.exit()
+
+def preview_audio(audio_folder):
+  audio_files = sorted(glob.glob(f'{audio_folder}/*'))
+  if audio_files[0][-3:] == 'mp3':
+    speech = AudioSegment.from_mp3(audio_files[0])
+  elif audio_files[0][-3:] == 'wav':
+    speech = AudioSegment.from_wav(audio_files[0])
+  else:
+    sys.exit('Must be mp3 or wav.')
+  for i in range(len(audio_files)):
+    if i > 0:
+      if audio_files[i][-3:] == 'mp3':
+        speech_n = AudioSegment.from_mp3(audio_files[i])
+      elif audio_files[i][-3:] == 'wav':
+        speech_n = AudioSegment.from_wav(audio_files[i])
+      speech = speech + speech_n
+  display(speech)
 
 # converts video to frames; outpouts in 0000x.png to framesOutPath location
 def vid2frames(vid_path, frames_out_path):

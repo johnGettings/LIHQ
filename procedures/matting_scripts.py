@@ -65,10 +65,10 @@ def matte_preview(speaker_vid, background, bg_resize, spkr_resize, offset):
     cv2.imwrite('./output/postprocessing/background/preview.png', new_background)
 
     # Dimensions
-    spkr_w = speaker.shape[0]
-    spkr_h = speaker.shape[1]
-    bg_w = new_background.shape[0]
-    bg_h = new_background.shape[1]
+    spkr_w = speaker.shape[1]
+    spkr_h = speaker.shape[0]
+    bg_w = new_background.shape[1]
+    bg_h = new_background.shape[0]
     cntr_btm = [round(bg_h - spkr_h), round(bg_w/2 - spkr_w/2)]
     cntr_cntr = [round(bg_h/2 - spkr_h/2), round(bg_w/2 - spkr_w/2)]
 
@@ -83,7 +83,9 @@ def matte_combine(offset, rotation):
     image_names = os.listdir(input_folder)
     background_names = os.listdir(background_folder)
     
+    i=0
     for image_name in image_names:
+        print(f'{i} of {len(image_names)}')
         base_name = os.path.basename(image_name).split('.')[0] + '.png'
         
         if len(background_names) == 1:
@@ -115,6 +117,8 @@ def matte_combine(offset, rotation):
         final = Image.fromarray(np.uint8(foreground))
 
         final.save(f'./output/postprocessing/output/{base_name}' )
+
+        i += 1
 
 def matte_video(speaker_vid, background, bg_resize, spkr_resize):
 

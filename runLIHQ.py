@@ -73,9 +73,18 @@ def run(face, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LI
         wav2lip_run(adir)
     w2l_folders = sorted(glob.glob('./output/wav2Lip/*'))
     if len(w2l_folders) < len(aud_dir_names):
-        print('Wav2Lip could not generate at least one of your videos. ',
-              'Most likely it could not detect a face. ',
-              'Or possibly there is an error with the file paths.')
+        print('Wav2Lip could not generate at least one of your videos.\n'
+            'Possibly bad audio, unrecognizable mouth, bad file paths, out of memory.\n'
+            'Run below command in a separate cell to get full traceback.\n'
+            '###########################################################\n'
+            '###########################################################\n'
+            'import os\n'
+            'adir = \'Folder1\' # The audio folder that failed. See Wav2Lip output folder to see whats missing.\n\n'
+            'vid_path = f\'''{os.getcwd()}/output/FOMM/Round1/{adir}.mp4\'''\n'
+            'aud_path = f\'''{os.getcwd()}/input/audio/{adir}/{adir}.wav\'''\n'
+            '%cd /content/LIHQ/Wav2Lip\n'
+            '!python inference.py --checkpoint_path ./checkpoints/wav2lip.pth --face {vid_path} --audio {aud_path} --outfile /content/test.mp4  --pads 0 20 0 0\n\n'
+            )
         sys.exit()
     else:
         print('Wav2Lip Complete')
@@ -121,6 +130,7 @@ def run(face, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LI
     R2start = time.time()
 
     #FOMM Round 2
+    print("First Order Motion Model")
     i=0
     for adir in aud_dir_names:
         ref_video = f'./output/frames2Vid/Round1/{adir}.mp4'
@@ -137,6 +147,7 @@ def run(face, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LI
     #GFPGAN (Restoration and upscaling)
     os.chdir('GFPGAN')
     for adir in aud_dir_names:
+        print(f"Final restoration and upscaling of {adir}")
         in_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/vid2Frames/Round2/{adir}/'
         out_pth = str(Path(os.getcwd()).parent.absolute()) + f'/output/GFPGAN/Round2/{adir}/'
         command = f'python inference_gfpgan.py -i {in_pth} -o {out_pth} -v 1.3 -s 4 --bg_upsampler realesrgan'
@@ -192,7 +203,7 @@ def run(face, audio_super = '/content/LIHQ/input/audio/', ref_vid = '/content/LI
     if save_path != None:
         for adir in aud_dir_names:
             src = f'./output/finalVidsOut/{adir}.mp4'
-            shutil.copyfile(src, save_path)
+            shutil.copyfile(src, f'{save_path}{adir}.mp4')
 
     print('Complete!')
     print('Check ./LIHQ/output/finalVidsOut and your save_path if one was set.')
