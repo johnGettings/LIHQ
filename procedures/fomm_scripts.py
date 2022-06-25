@@ -28,8 +28,8 @@ def FOMM_chop_refvid(aud_dir_names, ref_vid, audio_super, ref_vid_offset):
         with VideoFileClip(ref_vid) as video:
             total_audio_length = offset[i] + audio_length
             if video.duration < total_audio_length:
-                sys.exit('Reference video is shorter than audio. You can:',
-                        'Chop audio to multiple folders, reduce video offset,',
+                sys.exit('Reference video is shorter than audio. You can:'
+                        'Chop audio to multiple folders, reduce video offset,'
                         'use a longer reference video, use shorter audio.')
 
             new = video.subclip(offset[i], offset[i] + audio_length)
