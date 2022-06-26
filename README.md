@@ -1,7 +1,7 @@
 # LIHQ
 #### Long-Inference, High Quality Synthetic Speaker
 
-LIHQ is not a new architecture, it is an application that utilizes several open source deep learning models to generate an artifical speaker of your own design. It was built to be run in google colab to take advantage of free/ cheap GPU with basically zero setup and designed to be as user friendly as I could make it. It was not created for deepfake purposes but you can give it a try if you want (See LIHQ Examples colab and Demo Video). You will find that some voices or face images will not give your desired output and will take a little trial and error to get right. LIHQ really works best with a stylegan2 face and a simple narrator voice. Creating a simple speaker video with a styleGAN2 face and a simple TorToiSe voice is pretty straightforward and often produces good output. Currently, LIHQ is only supported in google colab. If someone wants to set it up locally and submit a pull request, be my guest.
+LIHQ is not a new architecture, it is an application that utilizes several open source deep learning models to generate an artifical speaker of your own design. It was built to be run in google colab to take advantage of free/ cheap GPU with basically zero setup and designed to be as user friendly as I could make it. It was not created for deepfake purposes but you can give it a try if you want (See LIHQ Examples colab and secondary Demo Video). You will find that some voices or face images will not give your desired output and will take a little trial and error to get right. LIHQ really works best with a stylegan2 face and a simple narrator voice. Creating a simple speaker video with a styleGAN2 face and a simple TorToiSe voice is pretty straightforward and often produces good output. Currently, LIHQ is only supported in google colab. If someone wants to set it up locally and submit a pull request, be my guest.
 
 ![LIHQ Examples](./docs/demo_gif.gif)
 
@@ -20,7 +20,7 @@ LIHQ is not a new architecture, it is an application that utilizes several open 
 7) Mouth Motion Generation (Wav2Lip)
 8) Upscale and Restoration (GFPGAN)
 9) Second Run Through (FOMM and GFPGAN)
-10) (Optional) Frame Interpolation (QVI) (Noticable improvement but LONG inference)
+10) (Optional) Frame Interpolation (QVI) (Noticable improvement but long inference)
 11) (Optional) Background Matting (MODNet)
 
 Pick out an image of a face that is forward-facing with a closed mouth (https://github.com/NVlabs/stylegan2) and upload or create audio of anyone you want using TorToiSe (built into the LIHQ colab) https://github.com/neonbjb/tortoise-tts
@@ -28,8 +28,9 @@ Pick out an image of a face that is forward-facing with a closed mouth (https://
 LIHQ will first transfer head and eye movement from my default reference video to your face image using a First Order Motion Model. Wav2Lip will then create mouth movement from your audio and paste it onto the FOMM output. Since the output is a very low resolution (256x256) we need to run through a face restoration & super resolution model. Repeating this process a second time will make the video look even better. And if you want it to be the highest quality, you can add frame interpolation at the end to increase the fps.
 
 ## Demo Video
+[![LIHQ Demo Video](https://img.youtube.com/vi/PXTiR_S3UuY/0.jpg)](https://www.youtube.com/watch?v=PXTiR_S3UuY)
 
-[![LIHQ Demo Video](https://img.youtube.com/vi/nPAV-jpTzqI/0.jpg)](https://www.youtube.com/watch?v=nPAV-jpTzqI)
+Above is the primary LIHQ demo video, demonstrating the software being used as intended. Deepfakes are possible in LIHQ as well but they take a bit more work. Check out some examples in the [Deepfake Example Video](https://www.youtube.com/watch?v=nPAV-jpTzqI).
 
 ## Colabs
 
