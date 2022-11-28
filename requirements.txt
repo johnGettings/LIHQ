@@ -14,6 +14,9 @@ transformers #Tortoise
 unidecode #Tortoise
 rotary_embedding_torch #Tortoise
 pydub
+ffmpeg
+imageio_ffmpeg
+--upgrade --no-cache-dir gdown #QVI.demo.py no download bug
 
 
 ########################################Already Installed in colab
