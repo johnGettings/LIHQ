@@ -16,7 +16,7 @@ rotary_embedding_torch #Tortoise
 pydub
 ffmpeg
 imageio_ffmpeg
-gdown==4.5.4 #QVI.demo.py no download bug
+--upgrade --no-cache-dir gdown #QVI.demo.py no download bug
 
 
 ########################################Already Installed in colab
