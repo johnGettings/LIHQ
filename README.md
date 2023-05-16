@@ -3,6 +3,9 @@
 
 LIHQ is not a new architecture, it is an application that utilizes several open source deep learning models to generate an artifical speaker of your own design. It was built to be run in google colab to take advantage of free/ cheap GPU with basically zero setup and designed to be as user friendly as I could make it. It was not created for deepfake purposes but you can give it a try if you want (See LIHQ Examples colab and secondary Demo Video). You will find that some voices or face images will not give your desired output and will take a little trial and error to get right. LIHQ really works best with a stylegan2 face and a simple narrator voice. Creating a simple speaker video with a styleGAN2 face and a simple TorToiSe voice is pretty straightforward and often produces good output.
 
+### Update:  
+Looks like Bark (https://github.com/suno-ai/bark) is now the open source SOTA for speech generation. Try it out instead of TorToiSe.
+
 ![LIHQ Examples](./docs/demo_gif.gif)
 
 ## How it works
