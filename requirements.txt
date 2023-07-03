@@ -17,6 +17,7 @@ pydub
 ffmpeg
 imageio_ffmpeg
 gdown==4.5.4 #QVI.demo.py no download bug
+librosa==0.9.1 #for mel positional argument error
 
 
 ########################################Already Installed in colab
